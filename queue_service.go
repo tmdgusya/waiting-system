@@ -68,10 +68,6 @@ func (q *QueueService) Enter(userID string) (*QueueStatus, error) {
 
 	ticket := res.(int64)
 
-	if err != nil {
-		return nil, err
-	}
-
 	nowServing, err := q.rdb.Get(ctx, q.keyNowServing()).Int64()
 
 	if err != nil {
