@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -14,7 +13,7 @@ local nextTicketKey = KEYS[2]
 
 local t = redis.call("GET", userKey)
 if t then
-	return t
+	return tonumber(t)
 end
 
 local newTicket = redis.call("INCR", nextTicketKey)
@@ -28,7 +27,7 @@ type QueueService struct {
 	admitRatePerSec int64 // 초당 몇명까지 입장시킬지 (ETA 계산)
 }
 
-func newQueueService(rdb *redis.Client, eventID string, admitRatePerSec int64) *QueueService {
+func NewQueueService(rdb *redis.Client, eventID string, admitRatePerSec int64) *QueueService {
 	return &QueueService{
 		rdb:             rdb,
 		eventID:         eventID,
@@ -67,7 +66,7 @@ func (q *QueueService) Enter(userID string) (*QueueStatus, error) {
 		return nil, err
 	}
 
-	ticket, err := strconv.ParseInt(res.(string), 10, 64)
+	ticket := res.(int64)
 
 	if err != nil {
 		return nil, err
