@@ -1,6 +1,11 @@
 package queue
 
-import "github.com/redis/go-redis/v9"
+import (
+	"context"
+	"fmt"
+
+	"github.com/redis/go-redis/v9"
+)
 
 const (
 	keySeq     = "queue:seq"
@@ -11,6 +16,25 @@ const (
 type RedisQueue struct {
 	rdb       *redis.Client
 	euqueueFn *redis.Script
+}
+
+type JoinResult struct {
+	Seq        int64
+	Position   int64
+	ETASeconds int64
+}
+
+func toInt64(v interface{}) (int64, error) {
+	switch x := v.(type) {
+	case int64:
+		return x, nil
+	case string:
+		var n int64
+		_, err := fmt.Sscan(x, &n)
+		return n, err
+	default:
+		return 0, fmt.Errorf("unexpected type %T", v)
+	}
 }
 
 func NewRedisQueue(rdb *redis.Client) *RedisQueue {
@@ -34,5 +58,21 @@ func NewRedisQueue(rdb *redis.Client) *RedisQueue {
 	return &RedisQueue{
 		rdb:       rdb,
 		euqueueFn: scripts,
+	}
+}
+
+func (q *RedisQueue) Join(ctx context.Context, userKey string) (*JoinResult, error) {
+	rawSeq, err := q.euqueueFn.Run(ctx, q.rdb, []string{
+		keySeq, keyZ, keyUserSeq,
+	}, userKey).Result()
+
+	if err != nil {
+		return nil, err
+	}
+
+	seq, err := toInt64(rawSeq)
+
+	if err != nil {
+		return nil, err
 	}
 }
