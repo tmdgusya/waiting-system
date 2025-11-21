@@ -2,6 +2,12 @@ package queue
 
 import "github.com/redis/go-redis/v9"
 
+const (
+	keySeq     = "queue:seq"
+	keyZ       = "queue:z"
+	keyUserSeq = "queue:userSeq"
+)
+
 type RedisQueue struct {
 	rdb       *redis.Client
 	euqueueFn *redis.Script
