@@ -27,7 +27,7 @@ type JoinResult struct {
 	ETASeconds int64
 }
 
-func toInt64(v interface{}) (int64, error) {
+func toInt64(v any) (int64, error) {
 	switch x := v.(type) {
 	case int64:
 		return x, nil
